@@ -125,15 +125,17 @@ st.markdown("""
     .js-plotly-plot .pielayer .slice {
         transform-origin: center;
         opacity: 0; 
-        animation: pieSliceSweep 0.5s cubic-bezier(0.25, 1, 0.5, 1) forwards;
+        animation: pieSliceSweep 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
-    /* 为前 6 个切片设置错开的延迟时间 */
-    .js-plotly-plot .pielayer .slice:nth-child(1) { animation-delay: 0.2s; }
-    .js-plotly-plot .pielayer .slice:nth-child(2) { animation-delay: 0.6s; }
-    .js-plotly-plot .pielayer .slice:nth-child(3) { animation-delay: 1.0s; }
-    .js-plotly-plot .pielayer .slice:nth-child(4) { animation-delay: 1.4s; }
-    .js-plotly-plot .pielayer .slice:nth-child(5) { animation-delay: 1.8s; }
-    .js-plotly-plot .pielayer .slice:nth-child(6) { animation-delay: 2.2s; }
+
+    /* 为前 7 个切片设置错开的延迟时间 (覆盖所有学历分类) */
+    .js-plotly-plot .pielayer .slice:nth-child(1) { animation-delay: 0.1s; }
+    .js-plotly-plot .pielayer .slice:nth-child(2) { animation-delay: 0.4s; }
+    .js-plotly-plot .pielayer .slice:nth-child(3) { animation-delay: 0.7s; }
+    .js-plotly-plot .pielayer .slice:nth-child(4) { animation-delay: 1.0s; }
+    .js-plotly-plot .pielayer .slice:nth-child(5) { animation-delay: 1.3s; }
+    .js-plotly-plot .pielayer .slice:nth-child(6) { animation-delay: 1.6s; }
+    .js-plotly-plot .pielayer .slice:nth-child(7) { animation-delay: 1.9s; }
     </style>
     """, unsafe_allow_html=True)
 
@@ -346,7 +348,7 @@ with tab_overview:
 
     # 矩形树图
     with st.container(border=True):
-        st.subheader("🌳 核心行业与城市岗位分布规模 (矩形树图)")
+        st.subheader("🌳 核心行业与城市岗位分布规模")
         top_inds = df['labels'].value_counts().head(8).index
         treemap_df = df[df['labels'].isin(top_inds)]
         treemap_data = treemap_df.groupby(['labels', 'address']).agg(
@@ -358,7 +360,9 @@ with tab_overview:
         )
         fig_treemap.update_traces(
             hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>平均薪资: %{color:.1f}K<extra></extra>',
-            textinfo="label+value+percent parent",
+            # 【核心修改】只显示 label (即行业名或城市名)，不再显示括号里的数值和百分比
+            textinfo="label",
+            textfont=dict(size=14),
             marker=dict(line=dict(width=2, color='#030a16'))
         )
         fig_treemap.update_layout(
@@ -420,8 +424,13 @@ with tab_interact:
                 fig_donut = px.pie(edu_counts, names='学历', values='人数', hole=0.6,
                                    color_discrete_sequence=px.colors.qualitative.Bold, template='plotly_dark')
 
+                # 【核心修改 2】关闭自动排序，强制从 12 点钟方向顺时针画
                 fig_donut.update_traces(
-                    textposition='outside', textinfo='percent+label',
+                    sort=False,  # 禁止重新排序
+                    direction='clockwise',  # 顺时针画
+                    rotation=0,  # 从 12 点方向开始
+                    textposition='outside',
+                    textinfo='percent+label',
                     hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>占比: %{percent}<extra></extra>',
                     marker=dict(line=dict(color='#030a16', width=2))
                 )
@@ -429,7 +438,7 @@ with tab_interact:
                                         margin=dict(t=30, b=30, l=0, r=0), showlegend=False,
                                         hoverlabel=HOVER_LABEL_CONFIG)
 
-                # 【核心修改 2】绑定动态 key，确保筛选条件一变，动画就重新触发
+                # 【核心修改 3】绑定动态 key，确保筛选条件一变，动画就重新触发
                 st.plotly_chart(fig_donut, use_container_width=True,
                                 key=f"donut_{len(filtered_df)}_{len(selected_cities)}")
 
@@ -461,7 +470,7 @@ with tab_interact:
 
     # 桑基图
     with st.container(border=True):
-        st.subheader("🌊 经验、学历与薪资档位的流动关系 (桑基图)")
+        st.subheader("🌊 经验、学历与薪资档位的流动关系")
         if not filtered_df.empty:
             sankey_df = filtered_df.dropna(subset=['experience', 'education', 'salary_level'])
             exps = sankey_df['experience'].unique().tolist()
@@ -702,7 +711,7 @@ with tab_conclusion:
             st.plotly_chart(fig_area, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
-    st.markdown("### 🚀 求职策略矩阵 (Strategy Matrix)")
+    st.markdown("### 🚀 求职策略建议")
     act_col1, act_col2, act_col3 = st.columns(3)
     with act_col1:
         st.markdown("""

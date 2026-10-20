@@ -9,20 +9,14 @@ from sklearn.preprocessing import OneHotEncoder
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 
-# ==========================================
-# 1. 页面基本配置与深度 UI 美化 (极简深色科技风)
-# ==========================================
+# 1. 页面基本配置与深度 UI 美化
 st.set_page_config(page_title="数据分析岗薪酬洞察", layout="wide", initial_sidebar_state="collapsed")
 
 st.markdown("""
     <style>
-    /* 1. 全局背景 */
     .stApp { background-color: #030a16; color: #c0d2e0; }
-
-    /* 2. 隐藏顶部默认边距 */
     .block-container { padding-top: 1.5rem !important; padding-bottom: 2rem !important; }
 
-    /* 3. 顶部科技感大标题 */
     .tech-header {
         text-align: center;
         background: linear-gradient(90deg, rgba(3,10,22,0) 0%, rgba(0,191,255,0.1) 50%, rgba(3,10,22,0) 100%);
@@ -36,7 +30,6 @@ st.markdown("""
         text-shadow: 0 0 15px rgba(0, 255, 255, 0.6);
     }
 
-    /* 4. 科技感卡片容器 */
     div[data-testid="stVerticalBlockBorderWrapper"] {
         background-color: rgba(5, 16, 31, 0.5) !important;
         border: 1px solid rgba(0, 191, 255, 0.15) !important; 
@@ -44,18 +37,13 @@ st.markdown("""
         border-radius: 4px !important; padding: 15px !important; margin-bottom: 15px;
     }
 
-    /* 5. 指标卡 */
     [data-testid="stMetricLabel"] { color: #7f98b0 !important; font-weight: bold !important; }
     [data-testid="stMetricValue"] { color: #00E5FF !important; font-size: 2.2rem; font-weight: bold; text-shadow: 0 0 8px rgba(0,229,255,0.4); }
-
-    /* 6. 输入组件标签 */
     [data-testid="stWidgetLabel"] p { color: #c0d2e0 !important; font-weight: 500 !important; font-size: 1.1rem; }
 
-    /* 7. 多选框 */
     div[data-baseweb="select"] > div { background-color: #05101f !important; border: 1px solid #1a5b82 !important; }
     div[data-baseweb="select"] span { background-color: #0b2d4a !important; color: #00FFFF !important; }
 
-    /* 8. 按钮 */
     div[data-testid="stFormSubmitButton"] > button {
         background: linear-gradient(90deg, #005c97, #00BFFF) !important; 
         color: #ffffff !important; font-weight: bold; width: 100%;
@@ -63,7 +51,6 @@ st.markdown("""
         border: none !important; box-shadow: 0 0 10px rgba(0,191,255,0.5) !important;
     }
 
-    /* 9. 结论框 */
     .insight-box {
         background-color: rgba(5, 16, 31, 0.8); padding: 20px; border-radius: 4px; 
         border-left: 4px solid #00E5FF; margin-bottom: 20px; 
@@ -73,7 +60,6 @@ st.markdown("""
     .insight-box li { color: #a0b8cf; line-height: 1.8; font-size: 0.95rem; }
     .insight-box b { color: #ffffff; }
 
-    /* 10. 明亮大 Tab */
     [data-testid="stTabs"] [data-baseweb="tab-list"] { 
         gap: 40px !important; border-bottom: none !important; 
         margin-bottom: 20px !important; justify-content: flex-start !important;
@@ -101,7 +87,6 @@ st.markdown("""
         text-shadow: 0 0 15px rgba(0, 229, 255, 0.6); 
     }
 
-    /* 11. 图表入场动画 */
     @keyframes revealBottomUp {
         from { clip-path: inset(0 0 100% 0); opacity: 0; }
         to { clip-path: inset(0 0 0 0); opacity: 1; }
@@ -110,8 +95,6 @@ st.markdown("""
         from { clip-path: inset(0 100% 0 0); opacity: 0; }
         to { clip-path: inset(0 0 0 0); opacity: 1; }
     }
-
-    /* 【终极优化】环形图切片依次扫过动画 */
     @keyframes pieSliceSweep {
         0% { opacity: 0; transform: rotate(-90deg) scale(0.8); }
         100% { opacity: 1; transform: rotate(0deg) scale(1); }
@@ -121,14 +104,12 @@ st.markdown("""
     .js-plotly-plot:has(.ytick text) .barlayer { animation: revealLeftRight 0.8s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
     .js-plotly-plot .scatterlayer { animation: revealLeftRight 1.2s cubic-bezier(0.25, 1, 0.5, 1) forwards; }
 
-    /* 环形图切片动态，延迟依次递增 */
     .js-plotly-plot .pielayer .slice {
         transform-origin: center;
         opacity: 0; 
         animation: pieSliceSweep 0.6s cubic-bezier(0.25, 1, 0.5, 1) forwards;
     }
 
-    /* 为前 7 个切片设置错开的延迟时间 (覆盖所有学历分类) */
     .js-plotly-plot .pielayer .slice:nth-child(1) { animation-delay: 0.1s; }
     .js-plotly-plot .pielayer .slice:nth-child(2) { animation-delay: 0.4s; }
     .js-plotly-plot .pielayer .slice:nth-child(3) { animation-delay: 0.7s; }
@@ -140,9 +121,7 @@ st.markdown("""
     """, unsafe_allow_html=True)
 
 
-# ==========================================
 # 2. 数据加载与深度清洗
-# ==========================================
 @st.cache_data
 def load_and_clean_data():
     try:
@@ -173,30 +152,19 @@ def load_and_clean_data():
     def parse_requirements(req):
         req = str(req)
         edu = '其他'
-        if '本科' in req:
-            edu = '本科'
-        elif '硕士' in req:
-            edu = '硕士'
-        elif '博士' in req:
-            edu = '博士'
-        elif '大专' in req:
-            edu = '大专'
-        elif '学历不限' in req or '不限' in req:
-            edu = '学历不限'
+        if '本科' in req: edu = '本科'
+        elif '硕士' in req: edu = '硕士'
+        elif '博士' in req: edu = '博士'
+        elif '大专' in req: edu = '大专'
+        elif '学历不限' in req or '不限' in req: edu = '学历不限'
 
         exp = '经验不限'
-        if '应届' in req or '在校' in req:
-            exp = '在校/应届'
-        elif '1年以内' in req:
-            exp = '1年以内'
-        elif '1-3年' in req:
-            exp = '1-3年'
-        elif '3-5年' in req:
-            exp = '3-5年'
-        elif '5-10年' in req:
-            exp = '5-10年'
-        elif '10年以上' in req:
-            exp = '10年以上'
+        if '应届' in req or '在校' in req: exp = '在校/应届'
+        elif '1年以内' in req: exp = '1年以内'
+        elif '1-3年' in req: exp = '1-3年'
+        elif '3-5年' in req: exp = '3-5年'
+        elif '5-10年' in req: exp = '5-10年'
+        elif '10年以上' in req: exp = '10年以上'
         return pd.Series([edu, exp])
 
     df[['education', 'experience']] = df['requirements'].apply(parse_requirements)
@@ -224,24 +192,19 @@ def load_and_clean_data():
 
 df = load_and_clean_data()
 
-# 全局原生 Hover 框配置
 HOVER_LABEL_CONFIG = dict(
     bgcolor="rgba(5, 16, 31, 0.95)", bordercolor="#00FFFF",
     font=dict(color="#ffffff", size=14, family="Arial, sans-serif")
 )
 
-# ==========================================
 # 3. 主页面与 Tab 划分
-# ==========================================
 st.markdown("""<div class="tech-header"><h1>📊 数据分析岗位招聘与薪酬洞察大屏</h1></div>""", unsafe_allow_html=True)
 
 tab_overview, tab_interact, tab_conclusion, tab_predict = st.tabs([
     "行业大盘概览", "多维薪酬透视", "求职破局指南", "智能薪资预测"
 ])
 
-# ------------------------------------------
-# TAB 1: 行业大盘概览
-# ------------------------------------------
+# Tab 1: 行业大盘概览
 with tab_overview:
     with st.container(border=True):
         st.markdown(f"**基于全量 {len(df)} 条数据分析岗位数据生成的行业大盘**")
@@ -257,72 +220,43 @@ with tab_overview:
             st.subheader("📊 薪资档位分布")
             salary_counts = df['salary_level'].value_counts().reset_index()
             salary_counts.columns = ['薪资档位', '岗位数量']
-            salary_counts['薪资档位'] = pd.Categorical(salary_counts['薪资档位'],
-                                                       categories=['0-8K', '8-15K', '15-25K', '25-40K', '>40K'],
-                                                       ordered=True)
+            salary_counts['薪资档位'] = pd.Categorical(salary_counts['薪资档位'], categories=['0-8K', '8-15K', '15-25K', '25-40K', '>40K'], ordered=True)
             salary_counts = salary_counts.sort_values('薪资档位', ascending=True)
-            fig_bar = px.bar(salary_counts, x='岗位数量', y='薪资档位', orientation='h', text='岗位数量',
-                             template='plotly_dark', color='岗位数量', color_continuous_scale='Plasma')
-            fig_bar.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                  font=dict(color='#c0d2e0'),
-                                  margin=dict(t=30, b=0, l=0, r=0), coloraxis_showscale=False,
-                                  hoverlabel=HOVER_LABEL_CONFIG)
+            fig_bar = px.bar(salary_counts, x='岗位数量', y='薪资档位', orientation='h', text='岗位数量', template='plotly_dark', color='岗位数量', color_continuous_scale='Plasma')
+            # 修改：将透明背景替换为深色背景
+            fig_bar.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', font=dict(color='#c0d2e0'), margin=dict(t=30, b=0, l=0, r=0), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
             fig_bar.update_traces(hovertemplate='<b>%{y}</b><br>岗位数: %{x}<extra></extra>')
             st.plotly_chart(fig_bar, use_container_width=True)
 
     with row1_col2:
         with st.container(border=True):
             st.subheader("📈 全行业薪资分布")
-            fig_dist = px.histogram(df, x='avg_salary', nbins=40, marginal='box', color_discrete_sequence=['#00E5FF'],
-                                    template='plotly_dark')
-            fig_dist.update_traces(marker_line_width=1, marker_line_color="#00BFFF",
-                                   hovertemplate='薪资: %{x:.1f}K<br>岗位数: %{y}<extra></extra>',
-                                   selector=dict(type='histogram'))
-            fig_dist.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                   xaxis_title="平均月薪 (K)",
-                                   yaxis_title="岗位数量", margin=dict(t=30, b=0, l=0, r=0), font=dict(color='#c0d2e0'),
-                                   xaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'),
-                                   yaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'),
-                                   hoverlabel=HOVER_LABEL_CONFIG)
+            fig_dist = px.histogram(df, x='avg_salary', nbins=40, marginal='box', color_discrete_sequence=['#00E5FF'], template='plotly_dark')
+            fig_dist.update_traces(marker_line_width=1, marker_line_color="#00BFFF", hovertemplate='薪资: %{x:.1f}K<br>岗位数: %{y}<extra></extra>', selector=dict(type='histogram'))
+            # 修改：将透明背景替换为深色背景
+            fig_dist.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="平均月薪 (K)", yaxis_title="岗位数量", margin=dict(t=30, b=0, l=0, r=0), font=dict(color='#c0d2e0'), xaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'), yaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_dist, use_container_width=True)
 
     with st.container(border=True):
         st.subheader("🗺️ 全国数据分析岗热门城市热度地图")
-        city_map_df = df.dropna(subset=['lng', 'lat']).groupby(['address', 'lng', 'lat']).agg(
-            岗位数量=('avg_salary', 'count'), 平均薪资=('avg_salary', 'median')).reset_index()
+        city_map_df = df.dropna(subset=['lng', 'lat']).groupby(['address', 'lng', 'lat']).agg(岗位数量=('avg_salary', 'count'), 平均薪资=('avg_salary', 'median')).reset_index()
         if not city_map_df.empty:
-            fig_map = px.scatter_geo(city_map_df, lat='lat', lon='lng', size='岗位数量', color='平均薪资',
-                                     hover_name='address', text='address',
-                                     color_continuous_scale='Turbo', size_max=40,
-                                     template='plotly_dark')
-            fig_map.update_traces(
-                hovertemplate='<b>%{text}</b><br>岗位数量: %{marker.size}<br>平均薪资: %{marker.color:.1f}K<extra></extra>',
-                marker=dict(line=dict(width=1.5, color='white'))
-            )
-            fig_map.update_geos(
-                visible=False, resolution=50, showcountries=True, countrycolor="#00BFFF",
-                showland=True, landcolor="#0b2d4a", showocean=True, oceancolor="#030a16",
-                showcoastlines=True, coastlinecolor="#00E5FF",
-                showframe=False, lataxis_range=[15, 55], lonaxis_range=[70, 140]
-            )
-            fig_map.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                  margin=dict(t=0, b=0, l=0, r=0), height=450, font=dict(color='#c0d2e0'),
-                                  coloraxis_colorbar=dict(title="平均薪资(K)"),
-                                  hoverlabel=HOVER_LABEL_CONFIG)
+            fig_map = px.scatter_geo(city_map_df, lat='lat', lon='lng', size='岗位数量', color='平均薪资', hover_name='address', text='address', color_continuous_scale='Turbo', size_max=40, template='plotly_dark')
+            fig_map.update_traces(hovertemplate='<b>%{text}</b><br>岗位数量: %{marker.size}<br>平均薪资: %{marker.color:.1f}K<extra></extra>', marker=dict(line=dict(width=1.5, color='white')))
+            fig_map.update_geos(visible=False, resolution=50, showcountries=True, countrycolor="#00BFFF", showland=True, landcolor="#0b2d4a", showocean=True, oceancolor="#030a16", showcoastlines=True, coastlinecolor="#00E5FF", showframe=False, lataxis_range=[15, 55], lonaxis_range=[70, 140])
+            # 修改：将透明背景替换为深色背景
+            fig_map.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=0, b=0, l=0, r=0), height=450, font=dict(color='#c0d2e0'), coloraxis_colorbar=dict(title="平均薪资(K)"), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_map, use_container_width=True)
 
     row2_col1, row2_col2 = st.columns(2)
     with row2_col1:
         with st.container(border=True):
             st.subheader("🏢 行业薪酬 TOP 10")
-            ind_salary = df.groupby('labels')['avg_salary'].median().reset_index().sort_values(by='avg_salary',
-                                                                                               ascending=False).head(10)
-            fig_ind = px.bar(ind_salary, x='avg_salary', y='labels', orientation='h', text_auto='.1f',
-                             template='plotly_dark', color='avg_salary', color_continuous_scale='Tealgrn')
+            ind_salary = df.groupby('labels')['avg_salary'].median().reset_index().sort_values(by='avg_salary', ascending=False).head(10)
+            fig_ind = px.bar(ind_salary, x='avg_salary', y='labels', orientation='h', text_auto='.1f', template='plotly_dark', color='avg_salary', color_continuous_scale='Tealgrn')
             fig_ind.update_traces(hovertemplate='<b>%{y}</b><br>薪资中位数: %{x:.1f}K<extra></extra>')
-            fig_ind.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='rgba(0,0,0,0)',
-                                  plot_bgcolor='rgba(0,0,0,0)', xaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'),
-                                  hoverlabel=HOVER_LABEL_CONFIG)
+            # 修改：将透明背景替换为深色背景
+            fig_ind.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_ind, use_container_width=True)
 
     with row2_col2:
@@ -332,49 +266,24 @@ with tab_overview:
             temp_exp_df = df.copy()
             temp_exp_df['experience'] = pd.Categorical(temp_exp_df['experience'], categories=exp_order, ordered=True)
             exp_salary = temp_exp_df.groupby('experience')['avg_salary'].median().reset_index()
-
-            fig_exp = px.line(exp_salary, x='experience', y='avg_salary', markers=True, template='plotly_dark',
-                              color_discrete_sequence=['#FF007F'])
-            fig_exp.update_traces(hovertemplate='<b>%{x}</b><br>薪资中位数: %{y:.1f}K<extra></extra>',
-                                  line=dict(width=4),
-                                  marker=dict(size=12, color='#FFD700', line=dict(width=2, color='white')))
-            fig_exp.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                  yaxis_title="薪资中位数(K)",
-                                  xaxis_title="", font=dict(color='#c0d2e0'),
-                                  xaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'),
-                                  yaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'),
-                                  hoverlabel=HOVER_LABEL_CONFIG)
+            fig_exp = px.line(exp_salary, x='experience', y='avg_salary', markers=True, template='plotly_dark', color_discrete_sequence=['#FF007F'])
+            fig_exp.update_traces(hovertemplate='<b>%{x}</b><br>薪资中位数: %{y:.1f}K<extra></extra>', line=dict(width=4), marker=dict(size=12, color='#FFD700', line=dict(width=2, color='white')))
+            # 修改：将透明背景替换为深色背景
+            fig_exp.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', yaxis_title="薪资中位数(K)", xaxis_title="", font=dict(color='#c0d2e0'), xaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'), yaxis=dict(gridcolor='rgba(0, 191, 255, 0.1)'), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_exp, use_container_width=True)
 
-    # 矩形树图
     with st.container(border=True):
         st.subheader("🌳 核心行业与城市岗位分布规模")
         top_inds = df['labels'].value_counts().head(8).index
         treemap_df = df[df['labels'].isin(top_inds)]
-        treemap_data = treemap_df.groupby(['labels', 'address']).agg(
-            岗位数量=('avg_salary', 'count'), 平均薪资=('avg_salary', 'median')).reset_index()
-
-        fig_treemap = px.treemap(
-            treemap_data, path=['labels', 'address'], values='岗位数量', color='平均薪资',
-            color_continuous_scale='Turbo', template='plotly_dark', hover_data=['平均薪资']
-        )
-        fig_treemap.update_traces(
-            hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>平均薪资: %{color:.1f}K<extra></extra>',
-            # 【核心修改】只显示 label (即行业名或城市名)，不再显示括号里的数值和百分比
-            textinfo="label",
-            textfont=dict(size=14),
-            marker=dict(line=dict(width=2, color='#030a16'))
-        )
-        fig_treemap.update_layout(
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            margin=dict(t=10, b=10, l=10, r=10), height=450,
-            coloraxis_colorbar=dict(title="平均薪资(K)"), hoverlabel=HOVER_LABEL_CONFIG
-        )
+        treemap_data = treemap_df.groupby(['labels', 'address']).agg(岗位数量=('avg_salary', 'count'), 平均薪资=('avg_salary', 'median')).reset_index()
+        fig_treemap = px.treemap(treemap_data, path=['labels', 'address'], values='岗位数量', color='平均薪资', color_continuous_scale='Turbo', template='plotly_dark', hover_data=['平均薪资'])
+        fig_treemap.update_traces(hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>平均薪资: %{color:.1f}K<extra></extra>', textinfo="label", textfont=dict(size=14), marker=dict(line=dict(width=2, color='#030a16')))
+        # 修改：将透明背景替换为深色背景
+        fig_treemap.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=10, b=10, l=10, r=10), height=450, coloraxis_colorbar=dict(title="平均薪资(K)"), hoverlabel=HOVER_LABEL_CONFIG)
         st.plotly_chart(fig_treemap, use_container_width=True)
 
-# ------------------------------------------
-# TAB 2: 多维薪酬透视
-# ------------------------------------------
+# Tab 2: 多维薪酬透视
 with tab_interact:
     with st.container(border=True):
         st.markdown("### 🎯 锁定目标画像")
@@ -397,15 +306,12 @@ with tab_interact:
                 edu_order = ['其他', '大专', '学历不限', '本科', '硕士', '博士']
                 existing_edus = [e for e in edu_order if e in filtered_df['education'].unique()]
                 edu_salary = filtered_df.groupby('education')['avg_salary'].median().reset_index()
-                edu_salary['education'] = pd.Categorical(edu_salary['education'], categories=existing_edus,
-                                                         ordered=True)
+                edu_salary['education'] = pd.Categorical(edu_salary['education'], categories=existing_edus, ordered=True)
                 edu_salary = edu_salary.sort_values('education')
-                fig_edu = px.bar(edu_salary, x='education', y='avg_salary', text_auto='.1f',
-                                 template='plotly_dark', color='avg_salary', color_continuous_scale='Oranges')
+                fig_edu = px.bar(edu_salary, x='education', y='avg_salary', text_auto='.1f', template='plotly_dark', color='avg_salary', color_continuous_scale='Oranges')
                 fig_edu.update_traces(hovertemplate='<b>%{x}</b><br>薪资中位数: %{y:.1f}K<extra></extra>')
-                fig_edu.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                      xaxis_title="", yaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'),
-                                      coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
+                # 修改：将透明背景替换为深色背景
+                fig_edu.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="", yaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
                 st.plotly_chart(fig_edu, use_container_width=True)
             else:
                 st.info("当前筛选条件下无数据")
@@ -416,43 +322,21 @@ with tab_interact:
             if not filtered_df.empty:
                 edu_counts = filtered_df['education'].value_counts().reset_index()
                 edu_counts.columns = ['学历', '人数']
-
-                # 【核心修改 1】强制按人数升序排列 (博士 -> ... -> 本科)
                 edu_counts = edu_counts.sort_values(by='人数', ascending=True)
-
-                # 生成环形图
-                fig_donut = px.pie(edu_counts, names='学历', values='人数', hole=0.6,
-                                   color_discrete_sequence=px.colors.qualitative.Bold, template='plotly_dark')
-
-                # 【核心修改 2】关闭自动排序，强制从 12 点钟方向顺时针画
-                fig_donut.update_traces(
-                    sort=False,  # 禁止重新排序
-                    direction='clockwise',  # 顺时针画
-                    rotation=0,  # 从 12 点方向开始
-                    textposition='outside',
-                    textinfo='percent+label',
-                    hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>占比: %{percent}<extra></extra>',
-                    marker=dict(line=dict(color='#030a16', width=2))
-                )
-                fig_donut.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                        margin=dict(t=30, b=30, l=0, r=0), showlegend=False,
-                                        hoverlabel=HOVER_LABEL_CONFIG)
-
-                # 【核心修改 3】绑定动态 key，确保筛选条件一变，动画就重新触发
-                st.plotly_chart(fig_donut, use_container_width=True,
-                                key=f"donut_{len(filtered_df)}_{len(selected_cities)}")
+                fig_donut = px.pie(edu_counts, names='学历', values='人数', hole=0.6, color_discrete_sequence=px.colors.qualitative.Bold, template='plotly_dark')
+                fig_donut.update_traces(sort=False, direction='clockwise', rotation=0, textposition='outside', textinfo='percent+label', hovertemplate='<b>%{label}</b><br>岗位数: %{value}<br>占比: %{percent}<extra></extra>', marker=dict(line=dict(color='#030a16', width=2)))
+                # 修改：将透明背景替换为深色背景
+                fig_donut.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=30, b=30, l=0, r=0), showlegend=False, hoverlabel=HOVER_LABEL_CONFIG)
+                st.plotly_chart(fig_donut, use_container_width=True, key=f"donut_{len(filtered_df)}_{len(selected_cities)}")
 
     with st.container(border=True):
         st.markdown("**🏙️ 目标城市薪酬排行 TOP 10**")
         if not filtered_df.empty:
-            city_salary = filtered_df.groupby('address')['avg_salary'].median().reset_index().sort_values(
-                by='avg_salary', ascending=False).head(10)
-            fig_city = px.bar(city_salary, x='avg_salary', y='address', orientation='h', text_auto='.1f',
-                              template='plotly_dark', color='avg_salary', color_continuous_scale='Blues')
+            city_salary = filtered_df.groupby('address')['avg_salary'].median().reset_index().sort_values(by='avg_salary', ascending=False).head(10)
+            fig_city = px.bar(city_salary, x='avg_salary', y='address', orientation='h', text_auto='.1f', template='plotly_dark', color='avg_salary', color_continuous_scale='Blues')
             fig_city.update_traces(hovertemplate='<b>%{y}</b><br>薪资中位数: %{x:.1f}K<extra></extra>')
-            fig_city.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='rgba(0,0,0,0)',
-                                   plot_bgcolor='rgba(0,0,0,0)', xaxis_title="薪资中位数(K)",
-                                   font=dict(color='#c0d2e0'), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
+            # 修改：将透明背景替换为深色背景
+            fig_city.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_city, use_container_width=True)
         else:
             st.info("当前筛选条件下无数据")
@@ -460,12 +344,10 @@ with tab_interact:
     with st.container(border=True):
         with st.expander("查看各城市数据分析岗薪酬区间（箱线图）"):
             if not filtered_df.empty:
-                fig_box = px.box(filtered_df, x='address', y='avg_salary', color='address', template='plotly_dark',
-                                 color_discrete_sequence=px.colors.qualitative.Bold)
+                fig_box = px.box(filtered_df, x='address', y='avg_salary', color='address', template='plotly_dark', color_discrete_sequence=px.colors.qualitative.Bold)
                 fig_box.update_traces(hovertemplate='<b>%{x}</b><br>薪资区间: %{y:.1f}K<extra></extra>')
-                fig_box.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                      xaxis_title="", yaxis_title="薪资区间(K)", font=dict(color='#c0d2e0'),
-                                      showlegend=False, hoverlabel=HOVER_LABEL_CONFIG)
+                # 修改：将透明背景替换为深色背景
+                fig_box.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="", yaxis_title="薪资区间(K)", font=dict(color='#c0d2e0'), showlegend=False, hoverlabel=HOVER_LABEL_CONFIG)
                 st.plotly_chart(fig_box, use_container_width=True)
 
     row3_col1, row3_col2, row3_col3 = st.columns([1, 1, 1.2])
@@ -473,20 +355,15 @@ with tab_interact:
     df_tags = df_tags[df_tags['tag'].str.strip() != '']
     df_tags['tag'] = df_tags['tag'].str.strip()
 
-    whitelist = ['Python', 'SQL', 'Excel', 'Hive', 'Spark', 'Hadoop', 'Tableau', 'Power BI',
-                 'SAS', 'SPSS', 'R语言', 'R', 'MySQL', 'Oracle', 'Linux', 'HBase', 'Flink',
-                 'Pandas', 'NumPy', 'Sklearn', 'Java', 'Scala', 'Shell', 'ETL', 'Kettle',
-                 '机器学习', '数据挖掘', '数据仓库', '建模', '数据可视化', '深度学习', 'BI', 'AIGC']
+    whitelist = ['Python', 'SQL', 'Excel', 'Hive', 'Spark', 'Hadoop', 'Tableau', 'Power BI', 'SAS', 'SPSS', 'R语言', 'R', 'MySQL', 'Oracle', 'Linux', 'HBase', 'Flink', 'Pandas', 'NumPy', 'Sklearn', 'Java', 'Scala', 'Shell', 'ETL', 'Kettle', '机器学习', '数据挖掘', '数据仓库', '建模', '数据可视化', '深度学习', 'BI', 'AIGC']
     whitelist_lower = [w.lower() for w in whitelist]
     df_tags = df_tags[df_tags['tag'].str.lower().isin(whitelist_lower)]
-
 
     def format_skill(skill):
         skill_lower = skill.lower()
         for w in whitelist:
             if w.lower() == skill_lower: return w
         return skill
-
 
     if not df_tags.empty:
         df_tags['tag'] = df_tags['tag'].apply(format_skill)
@@ -496,12 +373,10 @@ with tab_interact:
                 st.markdown("**🔥 技能需求 TOP 10**")
                 top_tags = df_tags['tag'].value_counts().head(10).reset_index()
                 top_tags.columns = ['技能', '需求频次']
-                fig_skills = px.bar(top_tags, x='需求频次', y='技能', orientation='h',
-                                    template='plotly_dark', color='需求频次', color_continuous_scale='Purples')
+                fig_skills = px.bar(top_tags, x='需求频次', y='技能', orientation='h', template='plotly_dark', color='需求频次', color_continuous_scale='Purples')
                 fig_skills.update_traces(hovertemplate='<b>%{y}</b><br>出现次数: %{x}<extra></extra>')
-                fig_skills.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='rgba(0,0,0,0)',
-                                         plot_bgcolor='rgba(0,0,0,0)', font=dict(color='#c0d2e0'),
-                                         coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
+                # 修改：将透明背景替换为深色背景
+                fig_skills.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='#030a16', plot_bgcolor='#030a16', font=dict(color='#c0d2e0'), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
                 st.plotly_chart(fig_skills, use_container_width=True)
 
         with row3_col2:
@@ -518,19 +393,9 @@ with tab_interact:
                     colors = ['#00E5FF', '#FF007F', '#FFD700']
                     for i, city in enumerate(top_3_cities):
                         if city in radar_pivot.index:
-                            fig_radar.add_trace(go.Scatterpolar(
-                                r=radar_pivot.loc[city].values, theta=radar_pivot.columns,
-                                fill='toself', name=city, opacity=0.3,
-                                line=dict(color=colors[i % len(colors)], width=3), fillcolor=colors[i % len(colors)]
-                            ))
-                    fig_radar.update_layout(
-                        polar=dict(
-                            radialaxis=dict(visible=True, gridcolor='rgba(0, 191, 255, 0.2)', linecolor='#00BFFF'),
-                            angularaxis=dict(gridcolor='rgba(0, 191, 255, 0.2)'), bgcolor='rgba(0,0,0,0)'),
-                        showlegend=True, template='plotly_dark', paper_bgcolor='rgba(0,0,0,0)',
-                        plot_bgcolor='rgba(0,0,0,0)', margin=dict(t=30, b=30, l=30, r=30),
-                        font=dict(color='#c0d2e0', size=10), hoverlabel=HOVER_LABEL_CONFIG
-                    )
+                            fig_radar.add_trace(go.Scatterpolar(r=radar_pivot.loc[city].values, theta=radar_pivot.columns, fill='toself', name=city, opacity=0.3, line=dict(color=colors[i % len(colors)], width=3), fillcolor=colors[i % len(colors)]))
+                    # 修改：将透明背景替换为深色背景
+                    fig_radar.update_layout(polar=dict(radialaxis=dict(visible=True, gridcolor='rgba(0, 191, 255, 0.2)', linecolor='#00BFFF'), angularaxis=dict(gridcolor='rgba(0, 191, 255, 0.2)'), bgcolor='#030a16'), showlegend=True, template='plotly_dark', paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=30, b=30, l=30, r=30), font=dict(color='#c0d2e0', size=10), hoverlabel=HOVER_LABEL_CONFIG)
                     st.plotly_chart(fig_radar, use_container_width=True)
 
         with row3_col3:
@@ -539,19 +404,13 @@ with tab_interact:
                 tag_counts = df_tags['tag'].value_counts()
                 common_tags = tag_counts[tag_counts >= 3].index
                 if not common_tags.empty:
-                    tag_salary = df_tags[df_tags['tag'].isin(common_tags)].groupby('tag')[
-                        'avg_salary'].median().reset_index().sort_values(by='avg_salary', ascending=False).head(10)
-                    fig_tag_sal = px.bar(tag_salary, x='avg_salary', y='tag', orientation='h',
-                                         text_auto='.1f', template='plotly_dark', color='avg_salary',
-                                         color_continuous_scale='Bluyl')
+                    tag_salary = df_tags[df_tags['tag'].isin(common_tags)].groupby('tag')['avg_salary'].median().reset_index().sort_values(by='avg_salary', ascending=False).head(10)
+                    fig_tag_sal = px.bar(tag_salary, x='avg_salary', y='tag', orientation='h', text_auto='.1f', template='plotly_dark', color='avg_salary', color_continuous_scale='Bluyl')
                     fig_tag_sal.update_traces(hovertemplate='<b>%{y}</b><br>薪资中位数: %{x:.1f}K<extra></extra>')
-                    fig_tag_sal.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='rgba(0,0,0,0)',
-                                              plot_bgcolor='rgba(0,0,0,0)', xaxis_title="薪资中位数(K)",
-                                              font=dict(color='#c0d2e0'), coloraxis_showscale=False,
-                                              hoverlabel=HOVER_LABEL_CONFIG)
+                    # 修改：将透明背景替换为深色背景
+                    fig_tag_sal.update_layout(yaxis={'categoryorder': 'total ascending'}, paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="薪资中位数(K)", font=dict(color='#c0d2e0'), coloraxis_showscale=False, hoverlabel=HOVER_LABEL_CONFIG)
                     st.plotly_chart(fig_tag_sal, use_container_width=True)
 
-    # 【移动到这里】桑基图放在 Tab 2 的最底部
     with st.container(border=True):
         st.subheader("🌊 经验、学历与薪资档位的流动关系")
         if not filtered_df.empty:
@@ -566,41 +425,24 @@ with tab_interact:
             link_exp_edu = sankey_df.groupby(['experience', 'education']).size().reset_index(name='count')
             link_edu_sal = sankey_df.groupby(['education', 'salary_level']).size().reset_index(name='count')
 
-            sources = [node_indices[x] for x in link_exp_edu['experience']] + [node_indices[x] for x in
-                                                                               link_edu_sal['education']]
-            targets = [node_indices[x] for x in link_exp_edu['education']] + [node_indices[x] for x in
-                                                                              link_edu_sal['salary_level']]
+            sources = [node_indices[x] for x in link_exp_edu['experience']] + [node_indices[x] for x in link_edu_sal['education']]
+            targets = [node_indices[x] for x in link_exp_edu['education']] + [node_indices[x] for x in link_edu_sal['salary_level']]
             values = link_exp_edu['count'].tolist() + link_edu_sal['count'].tolist()
 
             node_colors = ['#00BFFF'] * len(exps) + ['#00E5FF'] * len(edus) + ['#FF7F0E'] * len(sals)
 
             fig_sankey = go.Figure(data=[go.Sankey(
-                node=dict(
-                    pad=15, thickness=20,
-                    line=dict(color="black", width=0.5),
-                    label=all_nodes,
-                    color=node_colors,
-                    hovertemplate='<b>%{label}</b><br>岗位总数: %{value}<extra></extra>'
-                ),
-                link=dict(
-                    source=sources, target=targets, value=values,
-                    color="rgba(0, 191, 255, 0.2)",
-                    hovertemplate='<b>%{source.label} ➔ %{target.label}</b><br>流动岗位数: %{value}<extra></extra>'
-                )
+                node=dict(pad=15, thickness=20, line=dict(color="black", width=0.5), label=all_nodes, color=node_colors, hovertemplate='<b>%{label}</b><br>岗位总数: %{value}<extra></extra>'),
+                link=dict(source=sources, target=targets, value=values, color="rgba(0, 191, 255, 0.2)", hovertemplate='<b>%{source.label} ➔ %{target.label}</b><br>流动岗位数: %{value}<extra></extra>')
             )])
-            fig_sankey.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#ffffff', size=12), height=500, margin=dict(t=30, b=30, l=30, r=30),
-                hoverlabel=HOVER_LABEL_CONFIG
-            )
+            # 修改：将透明背景替换为深色背景
+            fig_sankey.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', font=dict(color='#ffffff', size=12), height=500, margin=dict(t=30, b=30, l=30, r=30), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_sankey, use_container_width=True)
         else:
             st.info("当前筛选条件下无数据")
 
 
-# ------------------------------------------
-# TAB 3: 求职破局指南
-# ------------------------------------------
+# Tab 3: 求职破局指南
 with tab_conclusion:
     st.subheader("💡 写给数据分析求职者的破局指南")
     st.markdown("基于全量数据分析岗位数据的宏观洞察，为您指明职业发展方向。")
@@ -656,23 +498,12 @@ with tab_conclusion:
             st.markdown("**📊 薪资档位金字塔结构**")
             funnel_data = df['salary_level'].value_counts().reset_index()
             funnel_data.columns = ['薪资档位', '人数']
-            funnel_data['薪资档位'] = pd.Categorical(funnel_data['薪资档位'],
-                                                     categories=['0-8K', '8-15K', '15-25K', '25-40K', '>40K'],
-                                                     ordered=True)
+            funnel_data['薪资档位'] = pd.Categorical(funnel_data['薪资档位'], categories=['0-8K', '8-15K', '15-25K', '25-40K', '>40K'], ordered=True)
             funnel_data = funnel_data.sort_values('薪资档位', ascending=True)
-
-            fig_funnel = px.funnel(
-                funnel_data, x='人数', y='薪资档位',
-                color='薪资档位',
-                color_discrete_sequence=px.colors.sequential.Plasma_r,
-                template='plotly_dark'
-            )
+            fig_funnel = px.funnel(funnel_data, x='人数', y='薪资档位', color='薪资档位', color_discrete_sequence=px.colors.sequential.Plasma_r, template='plotly_dark')
             fig_funnel.update_traces(textinfo='value', hovertemplate='<b>%{y}</b><br>岗位数: %{x}<extra></extra>')
-            fig_funnel.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(t=10, b=10, l=0, r=0), height=280, showlegend=False,
-                font=dict(color='#c0d2e0'), hoverlabel=HOVER_LABEL_CONFIG
-            )
+            # 修改：将透明背景替换为深色背景
+            fig_funnel.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=10, b=10, l=0, r=0), height=280, showlegend=False, font=dict(color='#c0d2e0'), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_funnel, use_container_width=True)
 
     with col_ins2:
@@ -694,21 +525,10 @@ with tab_conclusion:
             temp_df_3 = df.copy()
             temp_df_3['experience'] = pd.Categorical(temp_df_3['experience'], categories=exp_order, ordered=True)
             exp_salary_plot = temp_df_3.groupby('experience')['avg_salary'].median().reset_index().dropna()
-
             fig_area = px.area(exp_salary_plot, x='experience', y='avg_salary', color_discrete_sequence=['#00E5FF'])
-            fig_area.update_traces(
-                line=dict(width=3, color='#00E5FF'), fillcolor='rgba(0, 229, 255, 0.15)',
-                mode='lines+markers+text', text=exp_salary_plot['avg_salary'].apply(lambda x: f"{x:.1f}K"),
-                textposition="top center", textfont=dict(color='#FFD700', size=12),
-                hovertemplate='<b>%{x}</b><br>薪资中位数: %{y:.1f}K<extra></extra>'
-            )
-            fig_area.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                margin=dict(t=30, b=10, l=0, r=0), height=280,
-                xaxis=dict(title="", gridcolor='rgba(0, 191, 255, 0.1)'),
-                yaxis=dict(title="薪资中位数(K)", gridcolor='rgba(0, 191, 255, 0.1)'),
-                font=dict(color='#c0d2e0'), hoverlabel=HOVER_LABEL_CONFIG
-            )
+            fig_area.update_traces(line=dict(width=3, color='#00E5FF'), fillcolor='rgba(0, 229, 255, 0.15)', mode='lines+markers+text', text=exp_salary_plot['avg_salary'].apply(lambda x: f"{x:.1f}K"), textposition="top center", textfont=dict(color='#FFD700', size=12), hovertemplate='<b>%{x}</b><br>薪资中位数: %{y:.1f}K<extra></extra>')
+            # 修改：将透明背景替换为深色背景
+            fig_area.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=30, b=10, l=0, r=0), height=280, xaxis=dict(title="", gridcolor='rgba(0, 191, 255, 0.1)'), yaxis=dict(title="薪资中位数(K)", gridcolor='rgba(0, 191, 255, 0.1)'), font=dict(color='#c0d2e0'), hoverlabel=HOVER_LABEL_CONFIG)
             st.plotly_chart(fig_area, use_container_width=True)
 
     st.markdown("<br>", unsafe_allow_html=True)
@@ -745,25 +565,19 @@ with tab_conclusion:
         </div>
         """, unsafe_allow_html=True)
 
-# ------------------------------------------
-# TAB 4: 智能薪资预测
-# ------------------------------------------
+# Tab 4: 智能薪资预测
 with tab_predict:
     st.subheader("🤖 数据分析岗薪资预测模型")
     st.markdown(f"基于 {len(df)} 条真实数据训练模型。输入你的求职画像，获取基于市场大数据的预期月薪参考。")
     st.divider()
-
 
     @st.cache_resource
     def train_model(data):
         if len(data) < 10: return None, None
         X = data[['education', 'experience', 'address', 'labels']]
         y = data['avg_salary']
-        preprocessor = ColumnTransformer(
-            transformers=[
-                ('cat', OneHotEncoder(handle_unknown='ignore'), ['education', 'experience', 'address', 'labels'])])
-        model = Pipeline(steps=[('preprocessor', preprocessor),
-                                ('regressor', RandomForestRegressor(n_estimators=100, random_state=42, max_depth=10))])
+        preprocessor = ColumnTransformer(transformers=[('cat', OneHotEncoder(handle_unknown='ignore'), ['education', 'experience', 'address', 'labels'])])
+        model = Pipeline(steps=[('preprocessor', preprocessor), ('regressor', RandomForestRegressor(n_estimators=100, random_state=42, max_depth=10))])
         model.fit(X, y)
 
         ohe = model.named_steps['preprocessor'].named_transformers_['cat']
@@ -779,11 +593,9 @@ with tab_predict:
 
         imp_df['Original'] = imp_df['Feature'].apply(map_to_original)
         grouped_imp = imp_df.groupby('Original')['Importance'].sum().reset_index()
-        grouped_imp['Original'] = grouped_imp['Original'].map(
-            {'education': '学历', 'experience': '经验', 'address': '城市', 'labels': '行业'})
+        grouped_imp['Original'] = grouped_imp['Original'].map({'education': '学历', 'experience': '经验', 'address': '城市', 'labels': '行业'})
         grouped_imp = grouped_imp.sort_values(by='Importance', ascending=True)
         return model, grouped_imp
-
 
     model, feature_imp = train_model(df)
 
@@ -807,26 +619,18 @@ with tab_predict:
 
             with st.container(border=True):
                 st.markdown("**📊 市场薪酬决定因素权重**")
-                fig_imp = px.bar(feature_imp, x='Importance', y='Original', orientation='h',
-                                 text_auto='.1%', template='plotly_dark', color='Importance',
-                                 color_continuous_scale='Teal')
+                fig_imp = px.bar(feature_imp, x='Importance', y='Original', orientation='h', text_auto='.1%', template='plotly_dark', color='Importance', color_continuous_scale='Teal')
                 fig_imp.update_traces(hovertemplate='<b>%{y}</b><br>影响权重: %{x:.1%}<extra></extra>')
-                fig_imp.update_layout(
-                    paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                    xaxis_title="", yaxis_title="", margin=dict(t=10, b=10, l=0, r=30),
-                    height=220, coloraxis_showscale=False,
-                    xaxis=dict(tickformat='.0%', gridcolor='rgba(0, 191, 255, 0.1)'), hoverlabel=HOVER_LABEL_CONFIG
-                )
+                # 修改：将透明背景替换为深色背景
+                fig_imp.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', xaxis_title="", yaxis_title="", margin=dict(t=10, b=10, l=0, r=30), height=220, coloraxis_showscale=False, xaxis=dict(tickformat='.0%', gridcolor='rgba(0, 191, 255, 0.1)'), hoverlabel=HOVER_LABEL_CONFIG)
                 st.plotly_chart(fig_imp, use_container_width=True)
 
         with col_result:
             if submit:
-                input_df = pd.DataFrame(
-                    {'education': [pred_edu], 'experience': [pred_exp], 'address': [pred_city], 'labels': [pred_ind]})
+                input_df = pd.DataFrame({'education': [pred_edu], 'experience': [pred_exp], 'address': [pred_city], 'labels': [pred_ind]})
                 predicted_salary = model.predict(input_df)[0]
 
-                filtered_bench = df[
-                    (df['education'] == pred_edu) & (df['experience'] == pred_exp) & (df['address'] == pred_city)]
+                filtered_bench = df[(df['education'] == pred_edu) & (df['experience'] == pred_exp) & (df['address'] == pred_city)]
 
                 with st.container(border=True):
                     st.markdown(f"""
@@ -850,16 +654,10 @@ with tab_predict:
                                 mode="gauge+number", value=better_ratio,
                                 number={'suffix': "%", 'font': {'color': '#00E5FF', 'size': 36}},
                                 title={'text': "击败同业者比例", 'font': {'color': '#c0d2e0', 'size': 14}},
-                                gauge={
-                                    'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#7f98b0"},
-                                    'bar': {'color': "#00E5FF"}, 'bgcolor': "rgba(0,0,0,0)",
-                                    'borderwidth': 2, 'bordercolor': "rgba(0, 191, 255, 0.3)",
-                                    'steps': [{'range': [0, 50], 'color': "rgba(255, 0, 127, 0.2)"},
-                                              {'range': [50, 100], 'color': "rgba(0, 229, 255, 0.2)"}]
-                                }
+                                gauge={'axis': {'range': [None, 100], 'tickwidth': 1, 'tickcolor': "#7f98b0"}, 'bar': {'color': "#00E5FF"}, 'bgcolor': "rgba(0,0,0,0)", 'borderwidth': 2, 'bordercolor': "rgba(0, 191, 255, 0.3)", 'steps': [{'range': [0, 50], 'color': "rgba(255, 0, 127, 0.2)"}, {'range': [50, 100], 'color': "rgba(0, 229, 255, 0.2)"}]}
                             ))
-                            fig_gauge.update_layout(paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                                                    margin=dict(t=40, b=10, l=20, r=20), height=180)
+                            # 修改：将透明背景替换为深色背景
+                            fig_gauge.update_layout(paper_bgcolor='#030a16', plot_bgcolor='#030a16', margin=dict(t=40, b=10, l=20, r=20), height=180)
                             st.plotly_chart(fig_gauge, use_container_width=True)
                         with c2:
                             st.markdown(f"""

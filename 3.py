@@ -468,52 +468,6 @@ with tab_interact:
                                       showlegend=False, hoverlabel=HOVER_LABEL_CONFIG)
                 st.plotly_chart(fig_box, use_container_width=True)
 
-    # 桑基图
-    with st.container(border=True):
-        st.subheader("🌊 经验、学历与薪资档位的流动关系")
-        if not filtered_df.empty:
-            sankey_df = filtered_df.dropna(subset=['experience', 'education', 'salary_level'])
-            exps = sankey_df['experience'].unique().tolist()
-            edus = sankey_df['education'].unique().tolist()
-            sals = sankey_df['salary_level'].unique().tolist()
-
-            all_nodes = exps + edus + sals
-            node_indices = {node: i for i, node in enumerate(all_nodes)}
-
-            link_exp_edu = sankey_df.groupby(['experience', 'education']).size().reset_index(name='count')
-            link_edu_sal = sankey_df.groupby(['education', 'salary_level']).size().reset_index(name='count')
-
-            sources = [node_indices[x] for x in link_exp_edu['experience']] + [node_indices[x] for x in
-                                                                               link_edu_sal['education']]
-            targets = [node_indices[x] for x in link_exp_edu['education']] + [node_indices[x] for x in
-                                                                              link_edu_sal['salary_level']]
-            values = link_exp_edu['count'].tolist() + link_edu_sal['count'].tolist()
-
-            node_colors = ['#00BFFF'] * len(exps) + ['#00E5FF'] * len(edus) + ['#FF7F0E'] * len(sals)
-
-            fig_sankey = go.Figure(data=[go.Sankey(
-                node=dict(
-                    pad=15, thickness=20,
-                    line=dict(color="black", width=0.5),
-                    label=all_nodes,
-                    color=node_colors,
-                    hovertemplate='<b>%{label}</b><br>岗位总数: %{value}<extra></extra>'
-                ),
-                link=dict(
-                    source=sources, target=targets, value=values,
-                    color="rgba(0, 191, 255, 0.2)",
-                    hovertemplate='<b>%{source.label} ➔ %{target.label}</b><br>流动岗位数: %{value}<extra></extra>'
-                )
-            )])
-            fig_sankey.update_layout(
-                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-                font=dict(color='#ffffff', size=12), height=500, margin=dict(t=30, b=30, l=30, r=30),
-                hoverlabel=HOVER_LABEL_CONFIG
-            )
-            st.plotly_chart(fig_sankey, use_container_width=True)
-        else:
-            st.info("当前筛选条件下无数据")
-
     row3_col1, row3_col2, row3_col3 = st.columns([1, 1, 1.2])
     df_tags = filtered_df.assign(tag=filtered_df['tags'].str.split(',')).explode('tag')
     df_tags = df_tags[df_tags['tag'].str.strip() != '']
@@ -596,6 +550,53 @@ with tab_interact:
                                               font=dict(color='#c0d2e0'), coloraxis_showscale=False,
                                               hoverlabel=HOVER_LABEL_CONFIG)
                     st.plotly_chart(fig_tag_sal, use_container_width=True)
+
+    # 【移动到这里】桑基图放在 Tab 2 的最底部
+    with st.container(border=True):
+        st.subheader("🌊 经验、学历与薪资档位的流动关系")
+        if not filtered_df.empty:
+            sankey_df = filtered_df.dropna(subset=['experience', 'education', 'salary_level'])
+            exps = sankey_df['experience'].unique().tolist()
+            edus = sankey_df['education'].unique().tolist()
+            sals = sankey_df['salary_level'].unique().tolist()
+
+            all_nodes = exps + edus + sals
+            node_indices = {node: i for i, node in enumerate(all_nodes)}
+
+            link_exp_edu = sankey_df.groupby(['experience', 'education']).size().reset_index(name='count')
+            link_edu_sal = sankey_df.groupby(['education', 'salary_level']).size().reset_index(name='count')
+
+            sources = [node_indices[x] for x in link_exp_edu['experience']] + [node_indices[x] for x in
+                                                                               link_edu_sal['education']]
+            targets = [node_indices[x] for x in link_exp_edu['education']] + [node_indices[x] for x in
+                                                                              link_edu_sal['salary_level']]
+            values = link_exp_edu['count'].tolist() + link_edu_sal['count'].tolist()
+
+            node_colors = ['#00BFFF'] * len(exps) + ['#00E5FF'] * len(edus) + ['#FF7F0E'] * len(sals)
+
+            fig_sankey = go.Figure(data=[go.Sankey(
+                node=dict(
+                    pad=15, thickness=20,
+                    line=dict(color="black", width=0.5),
+                    label=all_nodes,
+                    color=node_colors,
+                    hovertemplate='<b>%{label}</b><br>岗位总数: %{value}<extra></extra>'
+                ),
+                link=dict(
+                    source=sources, target=targets, value=values,
+                    color="rgba(0, 191, 255, 0.2)",
+                    hovertemplate='<b>%{source.label} ➔ %{target.label}</b><br>流动岗位数: %{value}<extra></extra>'
+                )
+            )])
+            fig_sankey.update_layout(
+                paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
+                font=dict(color='#ffffff', size=12), height=500, margin=dict(t=30, b=30, l=30, r=30),
+                hoverlabel=HOVER_LABEL_CONFIG
+            )
+            st.plotly_chart(fig_sankey, use_container_width=True)
+        else:
+            st.info("当前筛选条件下无数据")
+
 
 # ------------------------------------------
 # TAB 3: 求职破局指南

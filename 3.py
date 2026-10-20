@@ -287,7 +287,7 @@ with tab_overview:
             st.plotly_chart(fig_dist, use_container_width=True)
 
     with st.container(border=True):
-        st.subheader("🗺️ 全国数据分析岗城市热度地图")
+        st.subheader("🗺️ 全国数据分析岗热门城市热度地图")
         city_map_df = df.dropna(subset=['lng', 'lat']).groupby(['address', 'lng', 'lat']).agg(
             岗位数量=('avg_salary', 'count'), 平均薪资=('avg_salary', 'median')).reset_index()
         if not city_map_df.empty:
